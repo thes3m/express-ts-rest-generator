@@ -17,7 +17,7 @@
                 "999999",
                 "--colors",
                 "--exit",
-                "${workspaceFolder}/src/tests/**/*.ts"
+                "${workspaceFolder}/src/tests/**/*.test.ts"
             ],
             "internalConsoleOptions": "openOnSessionStart"
         },

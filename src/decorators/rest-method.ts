@@ -7,7 +7,6 @@ import "reflect-metadata";
  * @param descriptor 
  */
 export function RestMethod(target: any, key: string | symbol, descriptor: PropertyDescriptor): PropertyDescriptor {
-
-    // return edited descriptor as opposed to overwriting the descriptor
+    Reflect.defineMetadata("restmethod", true, target.constructor.prototype, key);
     return descriptor;
 }

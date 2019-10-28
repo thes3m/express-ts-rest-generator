@@ -1,26 +1,42 @@
 import { expect } from 'chai';
+import { Router } from "express";
 import { ExpressRESTGenerator } from '../express-rest-generator';
 import { RestAPI } from '../decorators/rest-api';
-import { RestMethod } from '../decorators/rest-method';
+import { RestClass,RestClassWithExposedMethods, RestClassWithoutExposedMethods } from './empty-classes';
+import { IDictionary } from '../interfaces/dictionary';
 
 
-@RestAPI()
-class TestRestRouter{
-    data = ["test", "test2", "test3"];
-
-    @RestMethod
-    getData(count: number) : any[]{
-        return this.data;
-    }
+interface ResponseValue{
+    result?: IDictionary<any>,
+    error?: string,
+    code : number,
 }
 
 // if you used the '@types/mocha' method to install mocha type definitions, uncomment the following line
 // import 'mocha';
 
-describe('Hello function', () => {
-  it('should return hello world', () => {
-    const classInstance = new TestRestRouter();
+describe('ExpressRESTGenerator', () => {
+  let getRouterPaths = (router: Router) => {
+    return router.stack.filter(r => r.route).map(r => r.route.path);
+  }
+
+  it('should not create a rest endpoint', () => {
+    const classInstance = new RestClass();
+    
+    expect(()=> ExpressRESTGenerator.convertClassToExpressRouter(classInstance)).to.throw;
+  });
+
+  it('should create an endpoint without any methods', () => {
+    const classInstance = new RestClassWithoutExposedMethods();
+    const router = ExpressRESTGenerator.convertClassToExpressRouter(classInstance);
+    
+    expect(getRouterPaths(router)).to.eql([]);
+  });
+
+  it('should create an endpoint with one method', () => {
+    const classInstance = new RestClassWithExposedMethods();
     const router = ExpressRESTGenerator.convertClassToExpressRouter(classInstance);
     expect(router).to.not.be.undefined;
+    expect(getRouterPaths(router)).to.eql(["/get-data"]);
   });
 });

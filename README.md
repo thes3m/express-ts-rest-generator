@@ -29,7 +29,7 @@ export class REST {
 }
 ```
 
-can be exposed via REST api like this:
+Class can be exposed via REST api like this:
 
 ```
 import * as express from "express";
