@@ -1,9 +1,9 @@
 import * as fs from "fs";
-import * as ts from "typescript";
 import * as path from "path";
-import { IDictionary } from '../interfaces/dictionary';
-import { Utils } from '../utils';
-import { IRestGenerator } from './rest-generator';
+import * as ts from "typescript";
+import { IDictionary } from "../interfaces/dictionary";
+import { Utils } from "../utils";
+import { IRestGenerator } from "./rest-generator";
 
 export class FetchRestGenerator implements IRestGenerator {
     /**
@@ -14,18 +14,18 @@ export class FetchRestGenerator implements IRestGenerator {
      * @param embedInterfaces if false then external classes/interfaces will be imported and if true then they will be inlined
      */
     public generateClientServiceFromFile(tsClassFilePath: string, className: string, outputFile: string, embedInterfaces: boolean = true): string {
-        if(!fs.existsSync(tsClassFilePath)){
+        if (!fs.existsSync(tsClassFilePath)) {
             throw new Error("Cannot find TS file from path:" + tsClassFilePath);
         }
-        
+
         const sourceCode = fs.readFileSync(tsClassFilePath, "utf-8");
         const sourceFile = ts.createSourceFile(tsClassFilePath, sourceCode, ts.ScriptTarget.Latest, true);
 
-        //Check if AST was generated and if not then throw error
-        if(!sourceFile){
+        // Check if AST was generated and if not then throw error
+        if (!sourceFile) {
             throw new Error(`Error parsing typescript source file ${tsClassFilePath} !`);
         }
-        
+
         const classDeclaration = sourceFile.statements.filter((x: ts.Statement) => x.kind === ts.SyntaxKind.ClassDeclaration && x.decorators && x.decorators!.length > 0 && (x.decorators![0].expression as any).expression.getText() === "RestAPI" && (x as any).name.getText() === className)[0] as any as ts.ClassDeclaration;
         let apiPrefix = "";
         const decorator = classDeclaration.decorators ? classDeclaration.decorators[0] : undefined;
@@ -41,7 +41,7 @@ export class FetchRestGenerator implements IRestGenerator {
         if (classDeclaration) {
             clientServiceClass += "export class " + classDeclaration.name!!.getText() + "Service {\n";
             clientServiceClass += "\t serverUrl = window.location.protocol + '//' + window.location.host\n\n";
-            clientServiceClass += this.generateRequestMethod()
+            clientServiceClass += this.generateRequestMethod();
 
             for (const m in classDeclaration.members) {
                 const member = classDeclaration.members[m];
@@ -101,48 +101,50 @@ export class FetchRestGenerator implements IRestGenerator {
         return clientServiceClass;
     }
 
-    
+
     /**
      * Generates rest method that will be used by all other REST api calls (this will be the main rest method)
      */
     protected generateRequestMethod(): string {
-        let method = `
-        public async request(urlPath: string, method:string, queryParams?: any, body?: any, headers?: any): Promise<any> {
-            const searchParams = new URLSearchParams()
-    
-            if(queryParams){
-                for(let paramName in queryParams){
-                    searchParams.set(paramName, queryParams[paramName]);
-                }
-            }
+        const method =
+    `
+    public async request(urlPath: string, method:string, queryParams?: any, body?: any, headers?: any): Promise<any> {
+        const searchParams = new URLSearchParams()
 
-            const u = new URL(this.serverUrl + urlPath);
-            u.search = searchParams.toString();
-            
-            let bodyData = {
-                method : method
+        if(queryParams){
+            // tslint:disable-next-line: forin
+            for(let paramName in queryParams){
+                searchParams.set(paramName, queryParams[paramName]);
             }
-            if(body){
-                bodyData["headers"] = { "content-type": "application/json"};
-                bodyData["body"] = JSON.stringify(body);
-            }
-            //TODO other headers
+        }
 
-            const response = await fetch(u as any, bodyData);
-    
-            try {
-                const data = await response.json();
-                if (data.result) {
-                    return data.result;
-                }else if (data.error) {
-                    throw new Error(data.error);
-                }else{
-                    return;
-                }
-            } catch (e) {
-                throw e;
+        const u = new URL(this.serverUrl + urlPath);
+        u.search = searchParams.toString();
+
+        let bodyData: any = {
+            method : method
+        }
+        if(body){
+            bodyData["headers"] = { "content-type": "application/json"};
+            bodyData["body"] = JSON.stringify(body);
+        }
+        //TODO other headers
+
+        const response = await fetch(u as any, bodyData);
+
+        try {
+            const data = await response.json();
+            if (data.result) {
+                return data.result;
+            }else if (data.error) {
+                throw new Error(data.error);
+            }else{
+                return;
             }
-        }`;
+        } catch (e) {
+            throw e;
+        }
+    }`;
 
         return method;
     }
@@ -207,14 +209,14 @@ export class FetchRestGenerator implements IRestGenerator {
 
     /**
      * Generates interfaces for specified declaration (also includes child interface declarations). Returns array of generated interface names and stirng that contains all interface definitions
-     * @param declaration 
-     * @param recursive 
-     * @param ignoreDeclarations 
+     * @param declaration
+     * @param recursive
+     * @param ignoreDeclarations
      */
     protected generateInterface(declaration: ts.ClassDeclaration | ts.InterfaceDeclaration | ts.EnumDeclaration, recursive: boolean, ignoreDeclarations: string[]): { interfaceDeclarations: string, interfaceNames: string[] } {
         const out = {
             interfaceDeclarations : "",
-            interfaceNames : [] as string[]
+            interfaceNames : [] as string[],
         };
 
         if (!declaration.name || ignoreDeclarations.indexOf(declaration.name!!.getText()) >= 0) {
@@ -357,7 +359,7 @@ export class FetchRestGenerator implements IRestGenerator {
         let methodArgs = "";
         let params = "";
         let body = "";
-        let hasBody = false;
+        const hasBody = false;
 
         for (let i = 0; i < argumentNames.length; i++) {
             methodArgs += argumentNames[i] + ": " + argumentTypes[i];
@@ -366,40 +368,40 @@ export class FetchRestGenerator implements IRestGenerator {
             }
 
             if (argumentNames[i] === "body" && (methodType === "put" || methodType === "post")) {
-                if(body.length === 0){
-                    body += "{"
+                if (body.length === 0) {
+                    body += "{";
                 }
                 body += argumentNames[i] + ": " + argumentNames[i] + ",";
             } else {
-                if(params.length === 0){
+                if (params.length === 0) {
                     params += "{";
                 }
                 params += argumentNames[i] + ": " + argumentNames[i] + ",";
             }
         }
 
-        if(hasBody){
+        if (hasBody) {
             body += "}";
-        }else{
+        } else {
             body = "undefined";
         }
 
-        if(params.length > 0){
+        if (params.length > 0) {
             params += "}";
-        }else{
+        } else {
             params = "undefined";
         }
 
-        //If method returns a value then set return type to a specified return type
-        if(returnType.length > 0){
+        // If method returns a value then set return type to a specified return type
+        if (returnType.length > 0) {
             returnType = ": Promise<" + returnType + ">";
-        }else{
+        } else {
             returnType = ": Promise<void>";
         }
-        let methodString = `
-        public async ${methodName}(${methodArgs}) ${returnType}{
-            return this.request("${urlEnpoint}","${methodType}",${params},${body});
-        }`
+        const methodString = `
+    public async ${methodName}(${methodArgs}) ${returnType}{
+        return this.request("${urlEnpoint}","${methodType}",${params},${body});
+    }`;
 
         return methodString;
     }

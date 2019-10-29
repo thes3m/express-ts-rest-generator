@@ -3,6 +3,7 @@ import { AngularRestGenerator } from './generators/angular-rest-generator';
 import { IRestGenerator } from './generators/rest-generator';
 import * as path from "path";
 import * as fs from "fs";
+import { Linter, Configuration, ILinterOptions } from "tslint";
 
 export class ClientRestGenerator {
     public static generateClientServiceFromFile(tsClassFilePath: string, className: string, outputFile: string, embedInterfaces: boolean = true, generatorType : "fetch" | "angular" = "fetch") {
@@ -21,13 +22,31 @@ export class ClientRestGenerator {
     }
 
     public static generateClientService(tsClassFilePath: string, className: string, outputFile: string, embedInterfaces: boolean = true, generator: IRestGenerator) {
-        let generatorOuput = generator.generateClientServiceFromFile(tsClassFilePath, className, outputFile, embedInterfaces);
-
+        let generatorOutput = generator.generateClientServiceFromFile(tsClassFilePath, className, outputFile, embedInterfaces);
+        
         let outputDir = path.dirname(outputFile);
         if(!fs.existsSync(outputDir)){
             fs.mkdirSync(outputDir, {recursive : true})
         }
+        
+        fs.writeFileSync(outputFile,  generatorOutput);
+        
+        this.lintCode(outputFile);
+    }
 
-        fs.writeFileSync(outputFile,  generatorOuput);
+    private static lintCode(fileName: string): string{
+        const configurationFilename = "tslint.json";
+        const options: ILinterOptions = {
+            fix: true,
+            formatter: "json",
+            rulesDirectory: "customRules/",
+            formattersDirectory: "customFormatters/"
+        };
+        const fileContents = fs.readFileSync(fileName, "utf8");
+        const linter = new Linter(options);
+        const configuration = Configuration.findConfiguration(undefined, fileName).results;
+        linter.lint(fileName, fileContents, configuration);
+        const result = linter.getResult();
+        return result.output;
     }
 }
