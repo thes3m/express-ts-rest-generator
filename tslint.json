@@ -12,6 +12,8 @@
       "no-unused-expression" : false,
       "no-conditional-assignment": true,
       "no-consecutive-blank-lines": false,
+      "max-classes-per-file" : false,
+      "forin" : false,
       "no-console": {
           "severity": "warning",
           "options": ["debug", "info", "log", "time", "timeEnd", "trace"]

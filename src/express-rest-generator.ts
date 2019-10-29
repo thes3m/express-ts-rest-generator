@@ -1,6 +1,6 @@
+import { NextFunction, Request, Response, Router } from "express";
 import "reflect-metadata";
-import { Router, Response, Request, NextFunction } from "express";
-import { Utils } from './utils';
+import { Utils } from "./utils";
 
 export class ExpressRESTGenerator {
 
@@ -9,24 +9,25 @@ export class ExpressRESTGenerator {
      * @param routerClass class instance which we want to transform to router
      */
     public static convertClassToExpressRouter(routerClass: any): Router {
-        if(!routerClass){
+        if (!routerClass) {
             throw new Error("Invalid router class:" + routerClass);
         }
 
         const apiPrefix = Reflect.getMetadata("apiPrefix", routerClass);
 
-        if(apiPrefix === undefined){
+        if (apiPrefix === undefined) {
             throw new Error("Class " + (routerClass && routerClass.constructor ? routerClass.constructor.name : "") + " does not have a @RestApi decorator.") ;
         }
 
-        //Create a router to which we will attach methods
+        // Create a router to which we will attach methods
         const router = Router();
+
 
         for (const methodName in routerClass) {
             const method = routerClass[methodName] as any;
 
-            //Check if member is a function and if it had @RestMethod decorator
-            if (typeof(method) === "function" && Reflect.getMetadata("restmethod",routerClass, methodName) !== undefined) {
+            // Check if member is a function and if it had @RestMethod decorator
+            if (typeof(method) === "function" && Reflect.getMetadata("restmethod", routerClass, methodName) !== undefined) {
                 // Try to determine request method type form method name
                 const methodType = Utils.getRequestMethodType(methodName);
 
@@ -60,7 +61,7 @@ export class ExpressRESTGenerator {
                                 } else if (fnParamType === "string") {
                                     reqParamValue = reqParamValue;
                                 } else if (fnParamType === "object") {
-                                    //Get item from body since we store objects in body
+                                    // Get item from body since we store objects in body
                                     reqParamValue = req.body[paramName];
                                 }
                             }
@@ -74,7 +75,7 @@ export class ExpressRESTGenerator {
                         res.send({result});
                     } catch (e) {
                         res.status(500).send({
-                            error : e.toString()
+                            error : e.toString(),
                         });
                     }
 

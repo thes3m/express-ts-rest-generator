@@ -1,4 +1,4 @@
-export class Utils{
+export class Utils {
     public static getEndpointPath(methodName: string, prefix?: string): string {
         if (prefix && prefix.indexOf("/") === prefix.length - 1) {
             prefix = prefix.substr(0, prefix.length - 2);
