@@ -48,11 +48,11 @@ export class FetchRestGenerator implements IRestGenerator {
                 if (member.kind === ts.SyntaxKind.MethodDeclaration) {
                     const methodDeclaration = member as ts.MethodDeclaration;
                     const methodName = methodDeclaration.name.getText();
-                    const methodType = Utils.getRequestMethodType(methodName);
 
                     // Collect argument names and types
                     const argumentNames = methodDeclaration.parameters.map((x) => x.name.getText());
                     const argumentTypes = methodDeclaration.parameters.map((x) => x.type!!.getText());
+                    const methodType = Utils.getRequestMethodType(methodName, argumentTypes);
 
                     // Get return type (excluding Promise< and >)
                     let returnType = methodDeclaration.type ?  methodDeclaration.type!!.getText() : "";
@@ -367,7 +367,7 @@ export class FetchRestGenerator implements IRestGenerator {
                 methodArgs += ", ";
             }
 
-            if (argumentNames[i] === "body" && (methodType === "put" || methodType === "post")) {
+            if (/(string|object|number|any|boolean|number|undefined)/.test(argumentTypes[i]) === false && (methodType === "put" || methodType === "post")) {
                 if (body.length === 0) {
                     body += "{";
                 }

@@ -22,20 +22,19 @@ export class ExpressRESTGenerator {
         // Create a router to which we will attach methods
         const router = Router();
 
-
         for (const methodName in routerClass) {
             const method = routerClass[methodName] as any;
 
             // Check if member is a function and if it had @RestMethod decorator
             if (typeof(method) === "function" && Reflect.getMetadata("restmethod", routerClass, methodName) !== undefined) {
                 // Try to determine request method type form method name
-                const methodType = Utils.getRequestMethodType(methodName);
 
                 // Get all method types in a string[]
-                const methodParams = Reflect.getMetadata("design:paramtypes", routerClass, methodName).map((x: any) => this.getStringTypeFromReflectionType(x));
+                const fnArgTypes = Reflect.getMetadata("design:paramtypes", routerClass, methodName).map((x: any) => this.getStringTypeFromReflectionType(x));
                 const fnArgs = Utils.getFunctionArgs(method);
+                const methodType = Utils.getRequestMethodType(methodName, fnArgTypes);
 
-                if (methodParams.length !== fnArgs.length) {
+                if (fnArgTypes.length !== fnArgs.length) {
                     throw new Error("Length of method types and argument names does not match!");
                 }
 
@@ -47,7 +46,7 @@ export class ExpressRESTGenerator {
                         for (let i = 0; i < fnArgs.length; i++) {
                             const paramName = fnArgs[i];
 
-                            const fnParamType = methodParams[i];
+                            const fnParamType = fnArgTypes[i];
                             let reqParamValue = req.query[paramName];
                             const reqParamType = typeof(reqParamValue);
                             // Check if we need to convert parameter to a different type since query params are always strings

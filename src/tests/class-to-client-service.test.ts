@@ -9,7 +9,6 @@ import { RestClass, RestClassWithExposedMethods, RestClassWithoutExposedMethods 
 describe("ClientRestServiceGenerator", () => {
     const outFile = "./generated/RestClassService.ts";
     it("should generate client rest code", () => {
-        const classInstance = new RestClassWithExposedMethods();
         ClientRestGenerator.generateClientServiceFromFile(__dirname + "/empty-classes.ts", "RestClassWithExposedMethods", outFile, true, "angular");
         const exists = fs.existsSync(outFile);
         expect(exists).to.be.true;
