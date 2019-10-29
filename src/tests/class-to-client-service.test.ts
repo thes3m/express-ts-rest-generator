@@ -13,6 +13,7 @@ describe("ClientRestServiceGenerator", () => {
             className : "RestClassWithExposedMethods",
             embedInterfaces : true,
         });
+        ClientRestGenerator.generateClientServiceFromFile(__dirname + "/test-class.ts", "./generated/rest.ts", "angular");
         const exists = fs.existsSync(outFile);
         expect(exists).to.be.true;
     });

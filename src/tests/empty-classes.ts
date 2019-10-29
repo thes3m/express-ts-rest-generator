@@ -24,7 +24,7 @@ export class RestClassWithExposedMethods {
     public data = ["test", "test2", "test3"];
 
     @RestMethod
-    public getData(count: number): any[] {
-        return this.data;
+    public getData(count?: number): any[] {
+        return this.data.slice(0, count);
     }
 }

@@ -92,10 +92,16 @@ export class FetchRestGenerator implements IRestGenerator {
                         }
                     }
 
+                    const optionalArgs = methodDeclaration.parameters.filter((x) => {
+                        return x.questionToken;
+                    }).map((x) => {
+                        return x.name.getText();
+                    });
+
                     // Create method
-                    const methodString = this.generateClientMethodDefinition(methodName, methodType, Utils.getEndpointPath(methodName, apiPrefix), argumentNames, argumentTypes, returnType);
+                    const methodString = this.generateClientMethodDefinition(methodName, methodType, Utils.getEndpointPath(methodName, apiPrefix), argumentNames, argumentTypes, optionalArgs, returnType);
                     clientServiceClass += methodString;
-                    clientServiceClass += "";
+                    clientServiceClass += "\n";
                 }
             }
         }
@@ -361,7 +367,7 @@ export class FetchRestGenerator implements IRestGenerator {
         return `import { ${classNames.join(", ")} } from "${sourceFilePath}";`;
     }
 
-    protected generateClientMethodDefinition(methodName: string, methodType: string, urlEnpoint: string, argumentNames: string[], argumentTypes: string[], returnType: string): string {
+    protected generateClientMethodDefinition(methodName: string, methodType: string, urlEnpoint: string, argumentNames: string[], argumentTypes: string[], optionalArgs: string[], returnType: string): string {
         if (argumentNames.length !== argumentTypes.length) {
             throw new Error("Length of method types and argument names does not match!");
         }
@@ -372,7 +378,9 @@ export class FetchRestGenerator implements IRestGenerator {
         const hasBody = false;
 
         for (let i = 0; i < argumentNames.length; i++) {
-            methodArgs += argumentNames[i] + ": " + argumentTypes[i];
+            const posix = optionalArgs.indexOf(argumentNames[i]) >= 0 ? "?" : "";
+
+            methodArgs += argumentNames[i] + posix + ": " + argumentTypes[i];
             if (i !== argumentNames.length - 1) {
                 methodArgs += ", ";
             }
