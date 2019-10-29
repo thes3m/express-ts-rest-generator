@@ -6,6 +6,13 @@ import { IDictionary } from './interfaces/dictionary';
 import { Utils } from './utils';
 
 export class ClientRestGenerator {
+    /**
+     * Generates a class that can be used on a frontend/client for retriving requests from REST server.
+     * @param tsClassFilePath path to typescript class that contains class with @RestApi and @RestMethod annotations
+     * @param className name of class that we would like to expose
+     * @param outputFile  path to output file where we would like to save the generated service class
+     * @param embedInterfaces if false then external classes/interfaces will be imported and if true then they will be inlined
+     */
     public static generateClientServiceFromFile(tsClassFilePath: string, className: string, outputFile: string, embedInterfaces: boolean = true) {
         if(!fs.existsSync(tsClassFilePath)){
             throw new Error("Cannot find TS file from path:" + tsClassFilePath);
@@ -14,11 +21,12 @@ export class ClientRestGenerator {
         const sourceCode = fs.readFileSync(tsClassFilePath, "utf-8");
         const sourceFile = ts.createSourceFile(tsClassFilePath, sourceCode, ts.ScriptTarget.Latest, true);
 
+        //Check if AST was generated and if not then throw error
         if(!sourceFile){
             throw new Error(`Error parsing typescript source file ${tsClassFilePath} !`);
         }
-
-        const classDeclaration = sourceFile.statements.filter((x: ts.Statement) => x.kind === ts.SyntaxKind.ClassDeclaration && x.decorators && x.decorators!.length > 0 && (x.decorators![0].expression as any).expression.getText() === "RestAPI")[0] as any as ts.ClassDeclaration;
+        
+        const classDeclaration = sourceFile.statements.filter((x: ts.Statement) => x.kind === ts.SyntaxKind.ClassDeclaration && x.decorators && x.decorators!.length > 0 && (x.decorators![0].expression as any).expression.getText() === "RestAPI" && (x as any).name.getText() === className)[0] as any as ts.ClassDeclaration;
         let apiPrefix = "";
         const decorator = classDeclaration.decorators ? classDeclaration.decorators[0] : undefined;
         if (decorator && (decorator.expression as any).arguments.length > 0) {
@@ -32,6 +40,9 @@ export class ClientRestGenerator {
 
         if (classDeclaration) {
             clientServiceClass += "export class " + classDeclaration.name!!.getText() + "Service {\n";
+            clientServiceClass += "\t serverUrl = window.location.protocol + '//' + window.location.host\n\n";
+            clientServiceClass += this.generateRequestMethod()
+
             for (const m in classDeclaration.members) {
                 const member = classDeclaration.members[m];
                 if (member.kind === ts.SyntaxKind.MethodDeclaration) {
@@ -92,6 +103,52 @@ export class ClientRestGenerator {
         }
 
         fs.writeFileSync(outputFile,  clientServiceClass);
+    }
+
+    
+    /**
+     * Generates rest method that will be used by all other REST api calls (this will be the main rest method)
+     */
+    private static generateRequestMethod(): string {
+        let method = `
+        public async request(urlPath: string, method:string, queryParams?: any, body?: any, headers?: any): Promise<any> {
+            const searchParams = new URLSearchParams()
+    
+            if(queryParams){
+                for(let paramName in queryParams){
+                    searchParams.set(paramName, queryParams[paramName]);
+                }
+            }
+
+            const u = new URL(this.serverUrl + urlPath);
+            u.search = searchParams.toString();
+            
+            let bodyData = {
+                method : method
+            }
+            if(body){
+                bodyData["headers"] = { "content-type": "application/json"};
+                bodyData["body"] = JSON.stringify(body);
+            }
+            //TODO other headers
+
+            const response = await fetch(u as any, bodyData);
+    
+            try {
+                const data = await response.json();
+                if (data.result) {
+                    return data.result;
+                }else if (data.error) {
+                    throw new Error(data.error);
+                }else{
+                    return;
+                }
+            } catch (e) {
+                throw e;
+            }
+        }`;
+
+        return method;
     }
 
     /**
@@ -281,8 +338,8 @@ export class ClientRestGenerator {
         let importStatements = "";
         for (const file in importFiles) {
             importStatements += this.generateImportStatement(importFiles[file], file);
+            importStatements += "\n";
         }
-        importStatements += "\n";
         return importStatements;
     }
 
@@ -295,78 +352,52 @@ export class ClientRestGenerator {
             throw new Error("Length of method types and argument names does not match!");
         }
 
-        let methodString = "\tpublic async " + methodName + "(";
+        let methodArgs = "";
         let params = "";
+        let body = "";
         let hasBody = false;
-        // Function arguments
+
         for (let i = 0; i < argumentNames.length; i++) {
-            methodString += argumentNames[i] + ": " + argumentTypes[i];
+            methodArgs += argumentNames[i] + ": " + argumentTypes[i];
             if (i !== argumentNames.length - 1) {
-                methodString += ", ";
+                methodArgs += ", ";
             }
 
             if (argumentNames[i] === "body" && (methodType === "put" || methodType === "post")) {
-                hasBody = true;
+                if(body.length === 0){
+                    body += "{"
+                }
+                body += argumentNames[i] + ": " + argumentNames[i] + ",";
             } else {
-                params += `
-                if(${argumentNames[i]}){
-                    searchParams.set("${argumentNames[i]}", ${argumentNames[i]}.toString());
-                }`;
+                if(params.length === 0){
+                    params += "{";
+                }
+                params += argumentNames[i] + ": " + argumentNames[i] + ",";
             }
         }
 
-        if (returnType && returnType.length > 0) {
-            methodString += "): Promise<" + returnType + "> {\n";
-        } else {
-            methodString += "): Promise<void> {\n";
+        if(hasBody){
+            body += "}";
+        }else{
+            body = "undefined";
         }
 
-        // Add search parameters
-        methodString += "const searchParams = new URLSearchParams()\n";
-        if (params.length > 0) {
-            methodString += params;
+        if(params.length > 0){
+            params += "}";
+        }else{
+            params = "undefined";
         }
 
-        // Method implementation
-        methodString += `
-        const u = new URL(window.location.protocol + "//" + window.location.host + "${urlEnpoint}");
-        u.search = searchParams.toString();`;
-
-        if (hasBody) {
-            methodString += `
-            const response = await fetch(u as any, {
-                method : "${methodType.toUpperCase()}",
-                headers:{'content-type': 'application/json'},
-                body : JSON.stringify(body)
-            });
-            `;
-        } else {
-            methodString += `
-            const response = await fetch(u as any, {
-                method : "${methodType.toUpperCase()}"
-            });
-            `;
+        //If method returns a value then set return type to a specified return type
+        if(returnType.length > 0){
+            returnType = ": Promise<" + returnType + ">";
+        }else{
+            returnType = ": Promise<void>";
         }
-
-        methodString += `
-        try {
-            const data = await response.json();
-            if (data.result) {
-                return data.result;
-            }else if (data.error) {
-                throw new Error(data.error);
-            }else{
-                return;
-            }
-        } catch (e) {
-            if(response.status === 200){
-                //Success just no result
-                return;
-            }else{
-                throw e;
-            }
-        }`;
-        methodString += `\n\t}\n`;
+        let methodString = `
+        public async ${methodName}(${methodArgs}) ${returnType}{
+            return this.request("${urlEnpoint}","${methodType}",${params},${body});
+        }`
 
         return methodString;
     }
