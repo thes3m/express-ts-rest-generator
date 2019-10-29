@@ -61,7 +61,9 @@ export class ExpressRESTGenerator {
                                     reqParamValue = reqParamValue;
                                 } else if (fnParamType === "object") {
                                     // Get item from body since we store objects in body
-                                    reqParamValue = req.body[paramName];
+                                    if (req.body[paramName]) {
+                                        reqParamValue = req.body[paramName];
+                                    }
                                 }
                             }
                             args.push(reqParamValue);

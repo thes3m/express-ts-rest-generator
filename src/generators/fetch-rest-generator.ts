@@ -3,6 +3,7 @@ import * as path from "path";
 import * as ts from "typescript";
 import { IDictionary } from "../interfaces/dictionary";
 import { Utils } from "../utils";
+import { IClientGeneratorSettings } from "./client-generator-settings";
 import { IRestGenerator } from "./rest-generator";
 
 export class FetchRestGenerator implements IRestGenerator {
@@ -13,7 +14,7 @@ export class FetchRestGenerator implements IRestGenerator {
      * @param outputFile  path to output file where we would like to save the generated service class
      * @param embedInterfaces if false then external classes/interfaces will be imported and if true then they will be inlined
      */
-    public generateClientServiceFromFile(tsClassFilePath: string, className: string, outputFile: string, embedInterfaces: boolean = true): string {
+    public generateClientServiceFromFile(tsClassFilePath: string, outputFile: string, settings?: IClientGeneratorSettings): string {
         if (!fs.existsSync(tsClassFilePath)) {
             throw new Error("Cannot find TS file from path:" + tsClassFilePath);
         }
@@ -26,7 +27,16 @@ export class FetchRestGenerator implements IRestGenerator {
             throw new Error(`Error parsing typescript source file ${tsClassFilePath} !`);
         }
 
-        const classDeclaration = sourceFile.statements.filter((x: ts.Statement) => x.kind === ts.SyntaxKind.ClassDeclaration && x.decorators && x.decorators!.length > 0 && (x.decorators![0].expression as any).expression.getText() === "RestAPI" && (x as any).name.getText() === className)[0] as any as ts.ClassDeclaration;
+        // Find class declaration of type Class declaration that has decorators and that its name is equal to classes name that we require
+        const classDeclaration = sourceFile.statements.filter((x: ts.Statement) => {
+            return x.kind === ts.SyntaxKind.ClassDeclaration &&
+                    x.decorators && x.decorators!.length > 0 &&
+                    (x.decorators![0].expression as any).expression.getText() === "RestAPI" &&
+                    ( (settings && (x as any).name.getText() === settings.className) ||
+                      (!settings || !settings.className)
+                    );
+                })[0] as any as ts.ClassDeclaration;
+
         let apiPrefix = "";
         const decorator = classDeclaration.decorators ? classDeclaration.decorators[0] : undefined;
         if (decorator && (decorator.expression as any).arguments.length > 0) {
@@ -92,7 +102,7 @@ export class FetchRestGenerator implements IRestGenerator {
         clientServiceClass += "}";
 
         // Add import statements or embed imported classes as interfaces
-        if (embedInterfaces) {
+        if (settings && settings.embedInterfaces) {
             clientServiceClass = this.generateInterfacesForImportFiles(importFilesAbsolutePaths).interfaceDefinitions + clientServiceClass;
         } else {
             clientServiceClass = this.formatImportStatements(importFiles) + clientServiceClass;

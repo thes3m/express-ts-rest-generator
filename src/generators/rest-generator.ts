@@ -1,3 +1,4 @@
+import { IClientGeneratorSettings } from "./client-generator-settings";
 export interface IRestGenerator {
-    generateClientServiceFromFile(tsClassFilePath: string, className: string, outputFile: string, embedInterfaces): string;
+    generateClientServiceFromFile(tsClassFilePath: string, outputFile: string, settings?: IClientGeneratorSettings): string;
 }
