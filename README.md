@@ -13,7 +13,7 @@ You are also welcome to use just one part if you wish so.
 ## How to install
 
 ```
-npm install express-rest-api-generator
+npm install express-ts-rest-generator
 ```
 
 # How to use
@@ -85,13 +85,13 @@ In case of error a response will have a status code of 500 and a json describing
 You can automatically generate class that can be used on the frontend with the following code:
 
 ```ts
-import { ClientRestGenerator } from "express-ts-rest-generator";
+import { ExpressRESTGenerator } from "express-ts-rest-generator";
 
-ClientRestGenerator.generateClientServiceFromFile("./rest.ts","./generated/rest.service.ts");
+ExpressRESTGenerator.generateClientServiceFromFile("./rest.ts","./generated/rest.service.ts");
 
 ```
 
-The first argument `ClientRestGenerator.generateClientServiceFromFile` is the filepath to the typescript class for which we would like to generate the service. The class must again contain `@RestApi` and `@RestMethod` annotations in order to generate the client class. The second argument is the destination where we want to save the generated class. The third argument is options but it determins for what kind of client we would like to generate the class. Currently supported options are `"fetch"` and `"angular"`. The class will then be appropriately prepaired for client. 
+The first argument `ExpressRESTGenerator.generateClientServiceFromFile` is the filepath to the typescript class for which we would like to generate the service. The class must again contain `@RestApi` and `@RestMethod` annotations in order to generate the client class. The second argument is the destination where we want to save the generated class. The third argument is options but it determins for what kind of client we would like to generate the class. Currently supported options are `"fetch"` and `"angular"`. The class will then be appropriately prepaired for client. 
 
 The `fetch` generator is a default generator that uses `fetch()` method that is implemented in browser to retrive data from server. `angular` implementation uses the same API, but it adds additional decorator so that we ca use the class as a service.
 
@@ -157,7 +157,7 @@ For developement purposes you can can either put the code that generates client 
 You can pass additional settings to rest generator via options argument. If your file contains multiple classes and you wish to specify specific classname from which you would like to generate REST API you can use:
 
 ```ts
-ClientRestGenerator.generateClientServiceFromFile("./rest.ts","generated/rest.service.ts","fetch",{
+ExpressRESTGenerator.generateClientServiceFromFile("./rest.ts","generated/rest.service.ts","fetch",{
     className : "REST"
 });
 ```
@@ -165,7 +165,7 @@ ClientRestGenerator.generateClientServiceFromFile("./rest.ts","generated/rest.se
 By default all interfaces/classes are imported into service class, however if you wish to embed them in the service file you can use:
 
 ```ts
-ClientRestGenerator.generateClientServiceFromFile("./rest.ts","generated/rest.service.ts","fetch",{
+ExpressRESTGenerator.generateClientServiceFromFile("./rest.ts","generated/rest.service.ts","fetch",{
     embedInterfaces : true
 });
 ```
@@ -189,8 +189,8 @@ export class CustomRestGenerator extends FetchRestGenerator {
 Custom generator can then be used like this:
 
 ```ts
-import { ClientRestGenerator } from "express-ts-rest-generator";
+import { ExpressRESTGenerator } from "express-ts-rest-generator";
 import { CustomRestGenerator } from "./custom-rest-generator";
 
-ClientRestGenerator.generateClientService("./rest.ts","generated/rest.service.ts", new CustomRestGenerator());
+ExpressRESTGenerator.generateClientService("./rest.ts","generated/rest.service.ts", new CustomRestGenerator());
 ```
