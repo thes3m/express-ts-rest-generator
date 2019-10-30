@@ -1,8 +1,8 @@
-# Express API Generator
+# Express TS REST Generator
 
-Writing REST API on the server side can take quite some time and it takes even more time to implement client side code that fetches and parses data from REST endpoints. `express-api-generator` was created to simplify that process and provide methods that allow you to expose a class from server side to the client side and generate a service class that will connect to the server endpoints. While doing this it preserves method signatures so the client class will contain same method signatures and parameters as on the server side and since the process is automated you can simply recompile and get the new interfaces when the server API changes.
+Writing REST API on the server side can take quite some time and it takes even more time to implement client side code that fetches and parses data from REST endpoints. `express-ts-rest-generator` was created to simplify that process and provide methods that allow you to expose a class from server side to the client side and generate a service class that will connect to the server endpoints. While doing this it preserves method signatures so the client class will contain same method signatures and parameters as on the server side and since the process is automated you can simply recompile and get the new interfaces when the server API changes.
 
-`express-api-generator` is a Typescript library for generating Express Router from Typescript class and client side class for connecting to the same generated REST API. By fully utilizing this library you can eliminate an option for writing a REST API on client and server side and simply use same method calls on the client side as you wrote class on the server side while the library transparently hides the logic of how both of them comunicate between eachother. 
+`express-ts-rest-generator` is a Typescript library for generating Express Router from Typescript class and client side class for connecting to the same generated REST API. By fully utilizing this library you can eliminate an option for writing a REST API on client and server side and simply use same method calls on the client side as you wrote class on the server side while the library transparently hides the logic of how both of them comunicate between eachother. 
 
 The library contains 2 parts:
 * the utilities that converts a Typescript class to express `Router` to be used with `express`
@@ -20,7 +20,7 @@ npm install express-rest-api-generator
 
 ## Generating express Router
 
-`express-api-generator` can generate REST endpoints from Typescript class. In order to do so you need to annotate the class with `@RestApi` and each method with `@RestMethod` like this:
+`express-ts-rest-generator` can generate REST endpoints from Typescript class. In order to do so you need to annotate the class with `@RestApi` and each method with `@RestMethod` like this:
 
 ```ts
 @RestAPI("API/v1")
@@ -44,7 +44,7 @@ Class can be exposed via REST api like this:
 
 ```ts
 import * as express from "express";
-import { ExpressRESTGenerator } from "express-api-generator";
+import { ExpressRESTGenerator } from "express-ts-rest-generator";
 
 let app = express()
 app.use(bodyParser.json());
@@ -60,7 +60,7 @@ When the express server is started you can interact with the REST API via
 * `localhost:8080/API/v1/get-items`
 * `localhost:8080/API/v1/set-item?item?=newItem`
 
-`express-api-generator` exposes class methods by renaming methods to dash-case. Method parameters are converted to query parameters and need to be supplied via query parameters. Complex method argument datatypes will be accepted via request body. If method specifies `objects`/`classes`/`interfaces` as method parameters then the endpoint will use `POST` method instead of `GET`, which is used by default.
+`express-ts-rest-generator` exposes class methods by renaming methods to dash-case. Method parameters are converted to query parameters and need to be supplied via query parameters. Complex method argument datatypes will be accepted via request body. If method specifies `objects`/`classes`/`interfaces` as method parameters then the endpoint will use `POST` method instead of `GET`, which is used by default.
 
 If you wish to use a specific method type then you can prefix your method with method type. For example if you wish to have a `POST` method on a method `setEntity()` you can simply name the method `postEntity()` or `postSetEntity()` instead. You can do the same with `PUT`, `UPDATE` and other methods. 
 
@@ -85,7 +85,7 @@ In case of error a response will have a status code of 500 and a json describing
 You can automatically generate class that can be used on the frontend with the following code:
 
 ```ts
-import { ClientRestGenerator } from "express-api-generator";
+import { ClientRestGenerator } from "express-ts-rest-generator";
 
 ClientRestGenerator.generateClientServiceFromFile("./rest.ts","./generated/rest.service.ts");
 
@@ -186,10 +186,10 @@ export class CustomRestGenerator extends FetchRestGenerator {
 }
 ```
 
-This kind of generator can then be used like this:
+Custom generator can then be used like this:
 
 ```ts
-import { ClientRestGenerator } from "express-api-generator";
+import { ClientRestGenerator } from "express-ts-rest-generator";
 import { CustomRestGenerator } from "./custom-rest-generator";
 
 ClientRestGenerator.generateClientService("./rest.ts","generated/rest.service.ts", new CustomRestGenerator());

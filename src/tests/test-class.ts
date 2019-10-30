@@ -7,7 +7,7 @@ export class REST {
 
     @RestMethod
     public getItems(): any[] {
-        return items;
+        return this.items;
     }
 
     @RestMethod

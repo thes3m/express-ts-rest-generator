@@ -2,6 +2,7 @@
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es5",
@@ -11,6 +12,9 @@
     "lib": [
       "es2018",
       "dom"
-    ]
-  }
+    ],
+  },
+  "exclude": [
+    "./generated/**"
+  ]
 }

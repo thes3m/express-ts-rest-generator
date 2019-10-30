@@ -1,5 +1,12 @@
 import { NextFunction, Request, Response, Router } from "express";
+import * as fs from "fs";
+import * as path from "path";
 import "reflect-metadata";
+import { Configuration, ILinterOptions, Linter } from "tslint";
+import { AngularRestGenerator } from "./generators/angular-rest-generator";
+import { IClientGeneratorSettings } from "./generators/client-generator-settings";
+import { FetchRestGenerator } from "./generators/fetch-rest-generator";
+import { IRestGenerator } from "./generators/rest-generator";
 import { Utils } from "./utils";
 
 export class ExpressRESTGenerator {
@@ -86,9 +93,52 @@ export class ExpressRESTGenerator {
         return router;
     }
 
+    public static generateClientServiceFromFile(tsClassFilePath: string, outputFile: string, generatorType: "fetch" | "angular" = "fetch", settings?: IClientGeneratorSettings) {
+        let generator: IRestGenerator;
+        if (generatorType === "fetch") {
+            generator = new FetchRestGenerator();
+        } else if (generatorType === "angular") {
+            generator = new AngularRestGenerator();
+        }
+
+        if (!generator) {
+            throw new Error("cannot find generator for type:" + generatorType);
+        }
+
+        this.generateClientService(tsClassFilePath, outputFile, generator, settings);
+    }
+    public static generateClientService(tsClassFilePath: string, outputFile: string, generator: IRestGenerator, settings?: IClientGeneratorSettings) {
+        const generatorOutput = generator.generateClientServiceFromFile(tsClassFilePath, outputFile, settings);
+
+        const outputDir = path.dirname(outputFile);
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, {recursive : true});
+        }
+
+        fs.writeFileSync(outputFile,  generatorOutput);
+
+        this.lintCode(outputFile);
+    }
+
 
     // Argument in this case is usually function
     private static getStringTypeFromReflectionType(type: any): string {
         return type.name.replace("String", "string").replace("Number", "number").replace("Boolean", "boolean").replace("Object", "object").replace("Array", "any[]");
+    }
+
+    private static lintCode(fileName: string): string {
+        const options: ILinterOptions = {
+            fix: true,
+            formatter: "json",
+            formattersDirectory: "customFormatters/",
+            rulesDirectory: "customRules/",
+        };
+
+        const fileContents = fs.readFileSync(fileName, "utf8");
+        const linter = new Linter(options);
+        const configuration = Configuration.findConfiguration(undefined, fileName).results;
+        linter.lint(fileName, fileContents, configuration);
+        const result = linter.getResult();
+        return result.output;
     }
 }

@@ -1,10 +1,7 @@
 import { expect } from "chai";
 import { Router } from "express";
-import { RestAPI } from "../decorators/rest-api";
 import { ExpressRESTGenerator } from "../express-rest-generator";
-import { IDictionary } from "../interfaces/dictionary";
 import { RestClass, RestClassWithExposedMethods, RestClassWithoutExposedMethods } from "./empty-classes";
-
 
 // if you used the '@types/mocha' method to install mocha type definitions, uncomment the following line
 // import 'mocha';
