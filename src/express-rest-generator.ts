@@ -64,6 +64,9 @@ export class ExpressRESTGenerator {
                                     reqParamValue = reqParamValue === "true";
                                 } else if (fnParamType === "number") {
                                     reqParamValue = parseFloat(reqParamValue);
+                                    if(isNaN(reqParamValue)){
+                                        reqParamValue = undefined;
+                                    }
                                 } else if (fnParamType === "string") {
                                     reqParamValue = reqParamValue;
                                 } else if (fnParamType === "object") {
@@ -117,7 +120,7 @@ export class ExpressRESTGenerator {
 
         fs.writeFileSync(outputFile,  generatorOutput);
 
-        this.lintCode(outputFile);
+        // this.lintCode(outputFile);
     }
 
 
