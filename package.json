@@ -2,7 +2,8 @@
   "name": "express-ts-rest-generator",
   "version": "1.0.0",
   "description": "A library for automatic generating REST API endpoints from typescript class and typed client side classes for connecting to the same REST API.",
-  "main": "dist/express-rest-generator.js",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "tslint --fix -c tslint.json --project ./tsconfig.json",

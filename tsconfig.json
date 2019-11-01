@@ -6,6 +6,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es5",
+    "declaration": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
