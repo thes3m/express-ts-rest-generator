@@ -131,7 +131,9 @@ export class FetchRestGenerator implements IRestGenerator {
         if(queryParams){
             // tslint:disable-next-line: forin
             for(let paramName in queryParams){
-                searchParams.set(paramName, queryParams[paramName]);
+                if(queryParams[paramName] !== undefined){
+                    searchParams.set(paramName, queryParams[paramName]);
+                }
             }
         }
 
