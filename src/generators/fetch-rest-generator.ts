@@ -365,7 +365,7 @@ export class FetchRestGenerator implements IRestGenerator {
     }
 
     protected generateImportStatement(classNames: string[], sourceFilePath: string): string {
-        return `import { ${classNames.join(", ")} } from "${sourceFilePath}";`;
+        return `import { ${classNames.join(", ")} } from "${sourceFilePath.replace(/\\/g, "/")}";`;
     }
 
     protected generateClientMethodDefinition(methodName: string, methodType: string, urlEnpoint: string, argumentNames: string[], argumentTypes: string[], optionalArgs: string[], returnType: string): string {
