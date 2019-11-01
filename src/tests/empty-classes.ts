@@ -27,4 +27,10 @@ export class RestClassWithExposedMethods {
     public getData(count?: number): any[] {
         return this.data.slice(0, count);
     }
+
+    @RestMethod
+    public storeItemOptional(item?: string, defaultValue: string = "test"): boolean {
+        this.data.push(item);
+        return true;
+    }
 }

@@ -1,5 +1,5 @@
-import { RestAPI } from "../../dist/decorators/rest-api";
-import { RestMethod } from "../../dist/decorators/rest-method";
+import { RestAPI } from "../decorators/rest-api";
+import { RestMethod } from "../decorators/rest-method";
 
 @RestAPI("API/v1")
 export class REST {
