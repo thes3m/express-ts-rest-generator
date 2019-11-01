@@ -31,7 +31,6 @@ export class FetchRestGenerator implements IRestGenerator {
         const classDeclaration = sourceFile.statements.filter((x: ts.Statement) => {
             return x.kind === ts.SyntaxKind.ClassDeclaration &&
                     x.decorators && x.decorators!.length > 0 &&
-                    (x.decorators![0].expression as any).expression.getText() === "RestAPI" &&
                     ( (settings && (x as any).name.getText() === settings.className) ||
                       (!settings || !settings.className)
                     );
@@ -67,35 +66,37 @@ export class FetchRestGenerator implements IRestGenerator {
                     // Get return type (excluding Promise< and >)
                     let returnType = methodDeclaration.type ?  methodDeclaration.type!!.getText() : "";
                     returnType = returnType.indexOf("Promise<") === 0 ? returnType.replace(/(Promise<?)|>$/g, "") : returnType;
-                    const firstReturnType = returnType.replace(/(\<|\[).*/, "");
+                    const allReturnTypes = returnType.replace(/(<|>|\[|\])/g, " ").split(" ").map((x) => x.trim()) .filter((x) => x.length > 0);
 
-                    // Find import statement for return type
-                    const importDeclaration = sourceFile.statements.filter((x) => (x as any).importClause && (x as any).importClause.getText().indexOf(firstReturnType) >= 0)[0] as ts.ImportDeclaration;
-                    if (importDeclaration && returnType.length > 0) {
-                        const originalRelativeImportPathRegExResult = /\"(.|\.|\/)*\"/.exec(importDeclaration.getText());
-                        if (originalRelativeImportPathRegExResult && originalRelativeImportPathRegExResult.length > 0 && originalRelativeImportPathRegExResult[0].length > 0) {
-                            const originalRelativeImportPath = originalRelativeImportPathRegExResult[0].replace(/(\"|\')/g, "");
+                    // Find import statement for return type (returm type can have nested types so resolve those)
+                    for (const rt of allReturnTypes) {
+                        const importDeclaration = sourceFile.statements.filter((x) => (x as any).importClause && (x as any).importClause.getText().indexOf(rt) >= 0)[0] as ts.ImportDeclaration;
+                        if (importDeclaration && returnType.length > 0) {
+                            const originalRelativeImportPathRegExResult = /\"(.|\.|\/)*\"/.exec(importDeclaration.getText());
+                            if (originalRelativeImportPathRegExResult && originalRelativeImportPathRegExResult.length > 0 && originalRelativeImportPathRegExResult[0].length > 0) {
+                                const originalRelativeImportPath = originalRelativeImportPathRegExResult[0].replace(/(\"|\')/g, "");
 
-                            // Covert relative path from original file to path for new output file
-                            const fullImportPath = path.normalize(path.join(path.dirname(tsClassFilePath), originalRelativeImportPath)).replace(/\\/g, "/");
-                            const fullPath = `./${fullImportPath}.ts`;
+                                // Covert relative path from original file to path for new output file
+                                const fullImportPath = path.normalize(path.join(path.dirname(tsClassFilePath), originalRelativeImportPath)).replace(/\\/g, "/");
+                                const fullPath = `./${fullImportPath}.ts`;
 
-                            const importPath = path.normalize(path.relative(outputDir, fullImportPath));
-                            // console.log("import path", importPath, "full path", fullImportPath);
-                            if (!importFiles[importPath]) {
-                                importFiles[importPath] = [firstReturnType];
-                                importFilesAbsolutePaths.push(fullPath);
-                            } else if (importFiles[importPath].indexOf(firstReturnType) < 0) {
-                                importFiles[importPath].push(firstReturnType);
-                                importFilesAbsolutePaths.push(fullPath);
+                                const importPath = path.normalize(path.relative(outputDir, fullImportPath));
+                                // console.log("import path", importPath, "full path", fullImportPath);
+                                if (!importFiles[importPath]) {
+                                    importFiles[importPath] = [rt];
+                                    importFilesAbsolutePaths.push(fullPath);
+                                } else if (importFiles[importPath].indexOf(rt) < 0) {
+                                    importFiles[importPath].push(rt);
+                                    importFilesAbsolutePaths.push(fullPath);
+                                }
                             }
                         }
                     }
 
                     const optionalArgs = methodDeclaration.parameters.filter((x) => {
-                        return x.questionToken;
-                    }).map((x) => {
-                        return x.name.getText();
+                            return x.questionToken || x.initializer || x.dotDotDotToken;
+                        }).map((x) => {
+                            return x.name.getText();
                     });
 
                     // Create method
