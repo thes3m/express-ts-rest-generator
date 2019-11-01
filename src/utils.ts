@@ -1,7 +1,7 @@
 export class Utils {
 
     // Regular expression that can be used to test if a type is a primitive type (string,number,boolean)
-    public static primitiveTypeRegex = /(string|object|number|any|boolean|number|undefined)/;
+    public static primitiveTypeRegex = /(string|number|boolean|number)/;
 
     public static getEndpointPath(methodName: string, prefix?: string): string {
         if (prefix && prefix.indexOf("/") === prefix.length - 1) {

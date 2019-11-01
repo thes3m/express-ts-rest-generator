@@ -54,17 +54,15 @@ export class ExpressRESTGenerator {
                             const paramName = fnArgs[i];
 
                             const fnParamType = fnArgTypes[i];
-                            let reqParamValue = req.query[paramName];
+                            let reqParamValue = methodType === "get" ? req.query[paramName] : req.body[paramName];
                             const reqParamType = typeof(reqParamValue);
                             // Check if we need to convert parameter to a different type since query params are always strings
-                            if (paramName === "body") {
-                                reqParamValue = req.body;
-                            } else if (fnParamType !== reqParamType) {
+                            if (fnParamType !== reqParamType) {
                                 if (fnParamType === "boolean") {
                                     reqParamValue = reqParamValue === "true";
                                 } else if (fnParamType === "number") {
                                     reqParamValue = parseFloat(reqParamValue);
-                                    if(isNaN(reqParamValue)){
+                                    if (isNaN(reqParamValue)) {
                                         reqParamValue = undefined;
                                     }
                                 } else if (fnParamType === "string") {

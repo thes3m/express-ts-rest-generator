@@ -378,7 +378,6 @@ export class FetchRestGenerator implements IRestGenerator {
         let methodArgs = "";
         let params = "";
         let body = "";
-        const hasBody = false;
 
         for (let i = 0; i < argumentNames.length; i++) {
             const posix = optionalArgs.indexOf(argumentNames[i]) >= 0 ? "?" : "";
@@ -388,7 +387,7 @@ export class FetchRestGenerator implements IRestGenerator {
                 methodArgs += ", ";
             }
 
-            if (/(string|object|number|any|boolean|number|undefined)/.test(argumentTypes[i]) === false && (methodType === "put" || methodType === "post")) {
+            if (methodType !== "get") {
                 if (body.length === 0) {
                     body += "{";
                 }
@@ -401,7 +400,7 @@ export class FetchRestGenerator implements IRestGenerator {
             }
         }
 
-        if (hasBody) {
+        if (body.length > 0) {
             body += "}";
         } else {
             body = "undefined";
