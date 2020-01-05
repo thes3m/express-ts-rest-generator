@@ -60,7 +60,7 @@ export class FetchRestGenerator implements IRestGenerator {
 
                     // Collect argument names and types
                     const argumentNames = methodDeclaration.parameters.map((x) => x.name.getText());
-                    const argumentTypes = methodDeclaration.parameters.map((x) => x.type!!.getText());
+                    const argumentTypes = methodDeclaration.parameters.map((x) => x.type ? x.type.getText() : "any");
                     const methodType = Utils.getRequestMethodType(methodName, argumentTypes);
 
                     // Get return type (excluding Promise< and >)
