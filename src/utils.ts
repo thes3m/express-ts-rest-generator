@@ -25,7 +25,7 @@ export class Utils {
             for (const argType of methodArgumentTypes) {
                 if (this.primitiveTypeRegex.test(argType) === false) {
                     methodType = "post";
-                    return;
+                    break;
                 }
             }
         }
