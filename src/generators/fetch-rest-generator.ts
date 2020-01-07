@@ -63,11 +63,20 @@ export class FetchRestGenerator implements IRestGenerator {
                     const argumentTypes = methodDeclaration.parameters.map((x) => x.type ? x.type.getText() : "any");
                     const methodType = Utils.getRequestMethodType(methodName, argumentTypes);
 
+                    // Exclude Request parameters from method if they exist (they will be injected but they should not be passed via request)
+                    let requestArgumentIndex = argumentTypes.indexOf("Request");
+                    while (requestArgumentIndex >= 0) {
+                        argumentNames.splice(requestArgumentIndex, 1);
+                        argumentTypes.splice(requestArgumentIndex, 1);
+                        requestArgumentIndex = argumentTypes.indexOf("Request");
+                    }
+
                     // Check if input parameter is anything other than basic type
                     const nonPrimitiveTypes = argumentTypes.filter((x) => /(string|number|boolean|any|object)/.test(x) === false);
                     if (nonPrimitiveTypes.length > 0) {
                         throw new Error(`ERROR, detected non primitive type in ${classDeclaration.name!!.getText()}.${methodName}!`);
                     }
+
                     // Get return type (excluding Promise< and >)
                     let returnType = methodDeclaration.type ?  methodDeclaration.type!!.getText() : "";
                     returnType = returnType.indexOf("Promise<") === 0 ? returnType.replace(/(Promise<?)|>$/g, "") : returnType;
