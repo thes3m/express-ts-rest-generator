@@ -167,12 +167,10 @@ export class FetchRestGenerator implements IRestGenerator {
 
         try {
             const data = await response.json();
-            if (data.result) {
-                return data.result;
-            }else if (data.error) {
+            if (data.error) {
                 throw new Error(data.error);
-            }else{
-                return;
+            }else if (data) {
+                return data.result;
             }
         } catch (e) {
             throw e;
