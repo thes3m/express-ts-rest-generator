@@ -33,7 +33,7 @@ export class REST {
     }
 
     @RestMethod
-    public storeItem(item: string): boolean {
+    public setItem(item: string): boolean {
         this.items.push(item);
         return true;
     }
