@@ -5,12 +5,18 @@ import { ExpressRESTGenerator } from "../express-rest-generator";
 
 describe("Client class generation tests", () => {
     const outFile = "./generated/RestClassService.ts";
+
+    it("should not generate client rest code", () => {
+        expect(() => {
+            ExpressRESTGenerator.generateClientServiceFromFile(__dirname + "/test.ts", outFile);
+        }).to.throw();
+    });
+
     it("should generate client rest code", () => {
-        ExpressRESTGenerator.generateClientServiceFromFile(__dirname + "/empty-classes.ts", outFile, "angular", {
+        ExpressRESTGenerator.generateClientServiceFromFile(__dirname + "/test-rest-classes.ts", outFile, "angular", {
             className : "RestClassWithExposedMethods",
             embedInterfaces : true,
         });
-        ExpressRESTGenerator.generateClientServiceFromFile(__dirname + "/test-class.ts", "./generated/rest.ts", "angular");
         const exists = fs.existsSync(outFile);
         expect(exists).to.be.true;
     });

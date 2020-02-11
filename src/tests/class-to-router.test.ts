@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import { Router } from "express";
 import { ExpressRESTGenerator } from "../express-rest-generator";
-import { RestClass, RestClassWithExposedMethods, RestClassWithoutExposedMethods } from "./empty-classes";
+import { RestClass, RestClassWithExposedMethods, RestClassWithoutExposedMethods } from "./test-rest-classes";
 
 // if you used the '@types/mocha' method to install mocha type definitions, uncomment the following line
 // import 'mocha';
 
-describe("ExpressRESTGenerator", () => {
+describe("Server Express router generation", () => {
   const getRouterPaths = (router: Router) => {
     return router.stack.filter((r) => r.route).map((r) => r.route.path);
   };
@@ -24,10 +24,10 @@ describe("ExpressRESTGenerator", () => {
     expect(getRouterPaths(router)).to.eql([]);
   });
 
-  it("should create an endpoint with one method", () => {
+  it("should create an endpoint with 2 methods", () => {
     const classInstance = new RestClassWithExposedMethods();
     const router = ExpressRESTGenerator.convertClassToExpressRouter(classInstance);
     expect(router).to.not.be.undefined;
-    expect(getRouterPaths(router)).to.eql(["/get-data"]);
+    expect(getRouterPaths(router)).to.eql(["/get-data", "/store-item-optional"]);
   });
 });

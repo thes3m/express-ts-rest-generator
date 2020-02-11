@@ -54,7 +54,8 @@ export class FetchRestGenerator implements IRestGenerator {
 
             for (const m in classDeclaration.members) {
                 const member = classDeclaration.members[m];
-                if (member.kind === ts.SyntaxKind.MethodDeclaration) {
+                const restDecorators = member.decorators !== undefined && member.decorators.length > 0 ? member.decorators.filter((x) => x.getText() === "@RestMethod")  :  [];
+                if (member.kind === ts.SyntaxKind.MethodDeclaration && restDecorators.length > 0) {
                     const methodDeclaration = member as ts.MethodDeclaration;
                     const methodName = methodDeclaration.name.getText();
 

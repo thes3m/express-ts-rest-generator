@@ -33,4 +33,8 @@ export class RestClassWithExposedMethods {
         this.data.push(item);
         return true;
     }
+
+    public nonRestMethod(): boolean {
+        return false;
+    }
 }
